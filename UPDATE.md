@@ -10,6 +10,7 @@ This document outlines the changes made to the ISP4520-Zephyr-Examples project. 
 2. **Add `EXAMPLE.md`**: This file will provide practical examples of using components and scenarios.
 3. **Add `DIAGRAM.md`**: This file will include visual diagrams of architecture, sequence, and deployment.
 4. **Add `ARCHITECTURE.md`**: This file will provide a deep analysis of the project structure, description of files, components, dependencies, and configurations.
+5. **Add `SETUP.md`**: This file will provide instructions for setting up the environment for the project 'ISP4520-Zephyr-Examples', including initializing the workspace, modifying keys, building the application, and flashing the device.
 
 ## List of Operations
 
@@ -17,3 +18,4 @@ This document outlines the changes made to the ISP4520-Zephyr-Examples project. 
 2. Create `EXAMPLE.md` with practical examples and scenarios.
 3. Create `DIAGRAM.md` with visual diagrams of architecture, sequence, and deployment.
 4. Create `ARCHITECTURE.md` with a deep analysis of the project structure, description of files, components, dependencies, and configurations.
+5. Create `SETUP.md` with instructions for setting up the environment for the project 'ISP4520-Zephyr-Examples', including initializing the workspace, modifying keys, building the application, and flashing the device.
