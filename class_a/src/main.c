@@ -98,6 +98,18 @@ void main(void)
 			}
 
 			LOG_INF("Data sent!");
+
+			// Update frequency for next transmission
+			config.frequency += config.bandwidth * 1000;
+			if (config.frequency > 868500000) {
+				config.frequency = 868100000;
+			}
+
+			ret = lora_config(lora_dev, &config);
+			if (ret < 0) {
+				LOG_ERR("LoRa config update failed: %d", ret);
+				return;
+			}
 		}
 		k_sleep(DELAY);
 	}
