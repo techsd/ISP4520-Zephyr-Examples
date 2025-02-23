@@ -10,15 +10,36 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/uart.h>
 #include <zephyr/drivers/lora.h>
+#include <zephyr/drivers/gpio.h>
 
 #define LOG_LEVEL CONFIG_LOG_DEFAULT_LEVEL
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(lora_class_a);
 
 #define DELAY K_MSEC(10000)
+#define TIME_FOR_POLL 9
+#define SOS_TIME_TO_SEND 3
+#define TIME_TO_FIRST_SEARCH_SATELITS 90
+
+#define _RX_PIN_NUMBER 6
+#define _TX_PIN_NUMBER 8
+#define _RTS_PIN_NUMBER 14
+#define _CTS_PIN_NUMBER 15
+
+#define PIN_LED 30
+#define PIN_3V3ON 5
+#define GNSS_EXTINT 12
+#define GNSS_3D_FIX 17
+#define GNSS_JAM_IND 7
+#define GNSS_FORCE_ON 22
+#define GNSS_RESET 13
+#define ON_MEAS_CIRC 4
+#define BUTTON_IN 2
+#define ADC_IN 31
 
 static const struct device *lora_dev;
 static const struct device *uart_dev;
+static const struct device *gpio_dev;
 static uint8_t uart_buffer[256];
 static volatile size_t uart_buffer_len;
 
@@ -68,6 +89,23 @@ void main(void)
 		LOG_ERR("UART device not found");
 		return;
 	}
+
+	gpio_dev = device_get_binding(DT_LABEL(DT_NODELABEL(gpio0)));
+	if (!gpio_dev) {
+		LOG_ERR("GPIO device not found");
+		return;
+	}
+
+	gpio_pin_configure(gpio_dev, PIN_LED, GPIO_OUTPUT);
+	gpio_pin_configure(gpio_dev, PIN_3V3ON, GPIO_OUTPUT);
+	gpio_pin_configure(gpio_dev, GNSS_EXTINT, GPIO_OUTPUT);
+	gpio_pin_configure(gpio_dev, GNSS_3D_FIX, GPIO_INPUT);
+	gpio_pin_configure(gpio_dev, GNSS_JAM_IND, GPIO_INPUT);
+	gpio_pin_configure(gpio_dev, GNSS_FORCE_ON, GPIO_OUTPUT);
+	gpio_pin_configure(gpio_dev, GNSS_RESET, GPIO_OUTPUT);
+	gpio_pin_configure(gpio_dev, ON_MEAS_CIRC, GPIO_OUTPUT);
+	gpio_pin_configure(gpio_dev, BUTTON_IN, GPIO_INPUT);
+	gpio_pin_configure(gpio_dev, ADC_IN, GPIO_INPUT);
 
 	uart_callback_set(uart_dev, uart_cb, NULL);
 	uart_rx_enable(uart_dev, uart_buffer, sizeof(uart_buffer), 100);
