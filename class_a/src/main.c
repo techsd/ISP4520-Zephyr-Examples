@@ -9,6 +9,7 @@
 #include <zephyr/device.h>
 #include <zephyr/lorawan/lorawan.h>
 #include <zephyr/kernel.h>
+#include <zephyr/drivers/uart.h>
 
 /* Customize based on network configuration */
 #define LORAWAN_DEV_EUI			{ 0xDD, 0xEE, 0xAA, 0xDD, 0xBB, 0xEE,\
@@ -43,6 +44,40 @@ static void lorwan_datarate_changed(enum lorawan_datarate dr)
 
 	lorawan_get_payload_sizes(&unused, &max_size);
 	LOG_INF("New Datarate: DR_%d, Max Payload %d", dr, max_size);
+}
+
+static const struct device *uart_dev;
+static uint8_t uart_buffer[256];
+static volatile size_t uart_buffer_len;
+
+static void uart_cb(const struct device *dev, struct uart_event *evt, void *user_data)
+{
+	switch (evt->type) {
+	case UART_TX_DONE:
+		LOG_INF("UART TX done");
+		break;
+	case UART_RX_RDY:
+		memcpy(uart_buffer + uart_buffer_len, evt->data.rx.buf, evt->data.rx.len);
+		uart_buffer_len += evt->data.rx.len;
+		break;
+	case UART_RX_DISABLED:
+		LOG_INF("UART RX disabled");
+		break;
+	case UART_RX_BUF_REQUEST:
+		uart_rx_buf_rsp(dev, uart_buffer, sizeof(uart_buffer));
+		break;
+	case UART_RX_BUF_RELEASED:
+		LOG_INF("UART RX buffer released");
+		break;
+	case UART_RX_STOPPED:
+		LOG_ERR("UART RX stopped");
+		break;
+	case UART_RX_ABORTED:
+		LOG_ERR("UART RX aborted");
+		break;
+	default:
+		break;
+	}
 }
 
 void main(void)
@@ -87,29 +122,34 @@ void main(void)
 		return;
 	}
 
+	uart_dev = device_get_binding(DT_LABEL(DT_NODELABEL(uart0)));
+	if (!uart_dev) {
+		LOG_ERR("UART device not found");
+		return;
+	}
+
+	uart_callback_set(uart_dev, uart_cb, NULL);
+	uart_rx_enable(uart_dev, uart_buffer, sizeof(uart_buffer), 100);
+
 	LOG_INF("Sending data...");
 	while (1) {
-		ret = lorawan_send(2, data, sizeof(data),
-				   LORAWAN_MSG_CONFIRMED);
+		if (uart_buffer_len > 0) {
+			ret = lorawan_send(2, uart_buffer, uart_buffer_len, LORAWAN_MSG_CONFIRMED);
+			uart_buffer_len = 0;
 
-		/*
-		 * Note: The stack may return -EAGAIN if the provided data
-		 * length exceeds the maximum possible one for the region and
-		 * datarate. But since we are just sending the same data here,
-		 * we'll just continue.
-		 */
-		if (ret == -EAGAIN) {
-			LOG_ERR("lorawan_send failed: %d. Continuing...", ret);
-			k_sleep(DELAY);
-			continue;
+			if (ret == -EAGAIN) {
+				LOG_ERR("lorawan_send failed: %d. Continuing...", ret);
+				k_sleep(DELAY);
+				continue;
+			}
+
+			if (ret < 0) {
+				LOG_ERR("lorawan_send failed: %d", ret);
+				return;
+			}
+
+			LOG_INF("Data sent!");
 		}
-
-		if (ret < 0) {
-			LOG_ERR("lorawan_send failed: %d", ret);
-			return;
-		}
-
-		LOG_INF("Data sent!");
 		k_sleep(DELAY);
 	}
 }
