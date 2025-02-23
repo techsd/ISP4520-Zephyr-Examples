@@ -73,3 +73,19 @@ For updating and extending the functionality, refer to the following files:
 * `EXAMPLE.md`: Provides practical examples of using components and scenarios.
 * `DIAGRAM.md`: Includes visual diagrams of architecture, sequence, and deployment.
 * `ARCHITECTURE.md`: Provides a deep analysis of the project structure, description of files, components, dependencies, and configurations.
+
+## Verify Project Settings for Zephyr Development Environment
+
+Ensure the following settings are configured for the Zephyr development environment:
+
+* Single Mode BLE 5 Ready
+* NFC-A Tag for OOB pairing
+* Fully integrated LoRa & BLE matching and Antennas
+* Integrated LoRa and BLE 32 MHz & 32.768 kHz Clocks
+* LoRa section based on Semtech SX126x series transceiver
+* BLE section based on Nordic Semi nRF52
+* Externally Controlled or using embedded 32-bit ARM Cortex M4 CPU
+* 512 kB Flash and 64 kB SRAM
+* Analog and Digital peripherals
+* SPI interface
+* Supply Voltage 1.8V to 3.6V
